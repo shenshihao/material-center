@@ -163,15 +163,29 @@ async function claude(prompt, history = [], retries = 3) {
       );
 
       if (res.error) {
-        const msg = res.error.message || JSON.stringify(res.error);
-        // overloaded 错误重试
-        if (msg.toLowerCase().includes('overloaded') || msg.includes('429')) {
-          if (attempt < retries) {
-            const delay = attempt * 1500;
-            log.warn(`[Claude限流] 等待 ${delay}ms 后重试 (${attempt}/${retries})`);
-            await sleep(delay);
-            continue;
-          }
+        const err = res.error;
+        const msg = err.message || JSON.stringify(err);
+        const errStr = msg.toLowerCase();
+
+        // 需要重试的错误类型：限流、过载、服务器错误
+        const retryable = (
+          errStr.includes('overloaded') ||
+          errStr.includes('429') ||
+          errStr.includes('rate_limit') ||
+          errStr.includes('v2_error') ||
+          errStr.includes('259') ||          // MiniMax 特定错误码
+          errStr.includes('500') ||
+          errStr.includes('502') ||
+          errStr.includes('503') ||
+          errStr.includes('service_unavailable') ||
+          err.type === 'transient_error'
+        );
+
+        if (retryable && attempt < retries) {
+          const delay = attempt * 1500;
+          log.warn(`[Claude限流] 检测到可重试错误: ${msg.slice(0, 50)}, 等待 ${delay}ms (${attempt}/${retries})`);
+          await sleep(delay);
+          continue;
         }
         throw new Error(msg);
       }
