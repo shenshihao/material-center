@@ -76,14 +76,47 @@ async function getToken() {
   return _token;
 }
 
-async function replyMessage(messageId, text, token) {
-  return httpReq(
-    'open.feishu.cn',
-    `/open-apis/im/v1/messages/${messageId}/reply`,
-    'POST',
-    { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-    { msg_type: 'text', content: JSON.stringify({ text }) }
-  );
+async function replyMessage(messageId, text, token, retries = 3) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await httpReq(
+        'open.feishu.cn',
+        `/open-apis/im/v1/messages/${messageId}/reply`,
+        'POST',
+        { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+        { msg_type: 'text', content: JSON.stringify({ text }) }
+      );
+
+      // 检查飞书返回的错误码
+      if (res.code && res.code !== 0) {
+        // overloaded: 限流，尝试重试
+        if (res.code === 9490000 || res.code === 90019 || res.msg?.includes('overloaded')) {
+          if (attempt < retries) {
+            const delay = attempt * 1000; // 递增延迟 1s, 2s, 3s
+            log.warn(`[飞书限流] 等待 ${delay}ms 后重试 (${attempt}/${retries})`);
+            await sleep(delay);
+            continue;
+          }
+        }
+        throw new Error(`飞书API错误: code=${res.code}, msg=${res.msg}`);
+      }
+
+      return res;
+    } catch (e) {
+      if (attempt === retries) throw e;
+      if (e.message.includes('socket') || e.message.includes('ECONNREFUSED')) {
+        const delay = attempt * 500;
+        log.warn(`[连接错误] 等待 ${delay}ms 后重试 (${attempt}/${retries})`);
+        await sleep(delay);
+        continue;
+      }
+      throw e;
+    }
+  }
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function getChats(token) {
@@ -107,7 +140,7 @@ async function getMessages(chatId, token) {
 }
 
 // ============ Claude API ================
-async function claude(prompt, history = []) {
+async function claude(prompt, history = [], retries = 3) {
   const messages = [...history, { role: 'user', content: prompt }];
   const body = {
     model: CLAUDE_MODEL,
@@ -115,25 +148,48 @@ async function claude(prompt, history = []) {
     messages,
   };
 
-  const data = JSON.stringify(body);
-  const res = await httpReq(
-    'api.minimaxi.com',
-    '/anthropic/v1/messages',
-    'POST',
-    {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
-      'anthropic-version': '2023-06-01',
-    },
-    body
-  );
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const res = await httpReq(
+        'api.minimaxi.com',
+        '/anthropic/v1/messages',
+        'POST',
+        {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${ANTHROPIC_API_KEY}`,
+          'anthropic-version': '2023-06-01',
+        },
+        body
+      );
 
-  if (res.error) {
-    throw new Error(res.error.message || JSON.stringify(res.error));
+      if (res.error) {
+        const msg = res.error.message || JSON.stringify(res.error);
+        // overloaded 错误重试
+        if (msg.toLowerCase().includes('overloaded') || msg.includes('429')) {
+          if (attempt < retries) {
+            const delay = attempt * 1500;
+            log.warn(`[Claude限流] 等待 ${delay}ms 后重试 (${attempt}/${retries})`);
+            await sleep(delay);
+            continue;
+          }
+        }
+        throw new Error(msg);
+      }
+
+      const textBlock = (res.content || []).find(c => c.type === 'text');
+      return textBlock?.text || '';
+    } catch (e) {
+      if (attempt === retries) throw e;
+      // 网络错误重试
+      if (e.message.includes('socket') || e.message.includes('ECONNREFUSED') || e.message.includes('timeout')) {
+        const delay = attempt * 1000;
+        log.warn(`[网络错误] 等待 ${delay}ms 后重试 (${attempt}/${retries})`);
+        await sleep(delay);
+        continue;
+      }
+      throw e;
+    }
   }
-
-  const textBlock = (res.content || []).find(c => c.type === 'text');
-  return textBlock?.text || '';
 }
 
 // ============ 消息解析 ================
