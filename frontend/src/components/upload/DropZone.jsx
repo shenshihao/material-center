@@ -47,7 +47,7 @@ export default function DropZone({ onClose, initialFiles }) {
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
 
   const { tree, fetchCategories, createCategory } = useCategoryStore();
-  const { uploading, uploadProgress, uploadFiles } = useMaterialStore();
+  const { uploading, uploadProgress, uploadFiles, aiAnalyzing } = useMaterialStore();
   const inputRef = useRef();
   const dropdownRef = useRef();
 
@@ -104,8 +104,13 @@ export default function DropZone({ onClose, initialFiles }) {
     if (!files.length) return;
     setError('');
     try {
-      await uploadFiles(files, selectedCategoryId);
-      setToastMessage(`成功上传 ${files.length} 个文件！`);
+      const response = await uploadFiles(files, selectedCategoryId);
+      // Check if AI tags were generated
+      const aiTagCount = response?.data?.reduce((count, m) => count + (m.aiTags?.length || 0), 0) || 0;
+      const message = aiTagCount > 0
+        ? `成功上传 ${files.length} 个文件，AI 自动生成 ${aiTagCount} 个标签！`
+        : `成功上传 ${files.length} 个文件！`;
+      setToastMessage(message);
       setShowToast(true);
       setTimeout(() => {
         onClose?.();

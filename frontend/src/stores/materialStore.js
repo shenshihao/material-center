@@ -6,6 +6,7 @@ const useMaterialStore = create((set, get) => ({
   selected: new Set(),
   loading: false,
   uploading: false,
+  aiAnalyzing: false,
   uploadProgress: {}, // { filename: percent }
 
   filters: {
@@ -58,23 +59,32 @@ const useMaterialStore = create((set, get) => ({
   },
 
   uploadFiles: async (files, categoryId) => {
-    set({ uploading: true, uploadProgress: {} });
+    set({ uploading: true, uploadProgress: {}, aiAnalyzing: false });
     const formData = new FormData();
     files.forEach(f => formData.append('files', f));
     if (categoryId) formData.append('category_id', categoryId);
 
     try {
-      await client.post('/materials/upload', formData, {
+      const response = await client.post('/materials/upload', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onUploadProgress: (e) => {
           const pct = Math.round((e.loaded / e.total) * 100);
           set({ uploadProgress: { total: pct } });
         },
       });
+
+      // Check if any AI tags were generated
+      const hasAiTags = response.data?.some(m => m.aiTags && m.aiTags.length > 0);
+      if (hasAiTags) {
+        set({ aiAnalyzing: true });
+      }
+
       set({ uploading: false, uploadProgress: {} });
       await get().fetchMaterials();
+
+      return response;
     } catch (err) {
-      set({ uploading: false, uploadProgress: {} });
+      set({ uploading: false, uploadProgress: {}, aiAnalyzing: false });
       throw err;
     }
   },

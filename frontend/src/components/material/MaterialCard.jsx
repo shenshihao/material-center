@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Heart, Trash2, CheckCircle2, Circle, FileText, Film, FileImage, File, Archive, Download, Eye, Sparkles } from 'lucide-react';
+import { Heart, Trash2, CheckCircle2, Circle, FileText, Film, FileImage, File, Archive, Download, Eye, Sparkles, Tag } from 'lucide-react';
 import useMaterialStore from '../../stores/materialStore';
 
 const FILE_ICONS = {
@@ -204,6 +204,25 @@ export default function MaterialCard({ material, onOpen, lastSelected, setLastSe
             <p className="text-stardust-muted/70 text-[9px] mt-1.5 truncate">
               {material.category_name || '未分类'}
             </p>
+            {/* AI Tags */}
+            {material.tags && material.tags.length > 0 && (
+              <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                <Tag size={8} className="text-star/60" />
+                {material.tags.slice(0, 3).map(tag => (
+                  <span
+                    key={tag.id}
+                    className="px-1.5 py-0.5 rounded text-[8px] bg-star/15 text-star/80 border border-star/20"
+                  >
+                    {tag.name}
+                  </span>
+                ))}
+                {material.tags.length > 3 && (
+                  <span className="text-[8px] text-stardust-muted/60">
+                    +{material.tags.length - 3}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
           <span className="text-stardust-muted/60 text-[9px] tabular-nums font-mono flex-shrink-0 mt-0.5">
             {formatSize(material.file_size)}

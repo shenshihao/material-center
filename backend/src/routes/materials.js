@@ -5,6 +5,8 @@ import { renameSync, existsSync, readFileSync } from 'node:fs';
 import db from '../db.js';
 import upload from '../middleware/upload.js';
 import { hashFile, deleteFile, getMimeCategory, UPLOADS_BASE, getRelativePath } from '../services/fileService.js';
+import { analyzeImage } from '../services/claudeService.js';
+import { ensureTags, linkTagsToMaterial } from '../services/tagService.js';
 
 const router = Router();
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -181,6 +183,17 @@ router.get('/', (req, res) => {
     `).all(...params, Number(limit), offset);
   }
 
+  // Attach tags to each material
+  const tagStmt = db.prepare(`
+    SELECT t.* FROM tags t
+    JOIN material_tags mt ON mt.tag_id = t.id
+    WHERE mt.material_id = ?
+  `);
+  items = items.map(item => ({
+    ...item,
+    tags: tagStmt.all(item.id)
+  }));
+
   res.json({ success: true, data: items, meta: { page: Number(page), limit: Number(limit), total } });
 });
 
@@ -195,12 +208,13 @@ router.post('/upload', upload.array('files', 50), async (req, res, next) => {
     const results = [];
 
     // 获取当前分类下的最大 sort_order，新上传的排到最后
-    const catId = category_id ? Number(category_id) : null;
-    const maxRow = db.prepare(
-      catId !== null
-        ? 'SELECT MAX(sort_order) as max_order FROM materials WHERE category_id = ?'
-        : 'SELECT MAX(sort_order) as max_order FROM materials WHERE category_id IS NULL'
-    ).get(catId);
+    const catId = category_id !== undefined && category_id !== '' ? Number(category_id) : null;
+    let maxRow;
+    if (catId !== null) {
+      maxRow = db.prepare('SELECT MAX(sort_order) as max_order FROM materials WHERE category_id = ?').get(catId);
+    } else {
+      maxRow = db.prepare('SELECT MAX(sort_order) as max_order FROM materials WHERE category_id IS NULL').get();
+    }
     let nextOrder = (maxRow?.max_order ?? 0) + 1;
 
     for (const file of req.files) {
@@ -230,7 +244,43 @@ router.post('/upload', upload.array('files', 50), async (req, res, next) => {
         nextOrder++
       );
       const material = db.prepare('SELECT * FROM materials WHERE id = ?').get(result.lastInsertRowid);
-      results.push({ ...material, duplicate: duplicate ? { id: duplicate.id, name: duplicate.name } : null });
+
+      // AI 自动标签 (仅对图片启用)
+      let aiTags = [];
+      if (file.mimetype.startsWith('image/')) {
+        try {
+          const aiResult = await analyzeImage(relativePath);
+          if (aiResult) {
+            // 更新描述
+            if (aiResult.description) {
+              db.prepare("UPDATE materials SET description = ? WHERE id = ?").run(aiResult.description, material.id);
+              material.description = aiResult.description;
+            }
+            // 创建并关联标签
+            if (aiResult.tags.length > 0) {
+              const tagIds = ensureTags(aiResult.tags);
+              linkTagsToMaterial(material.id, tagIds);
+              aiTags = aiResult.tags;
+            }
+          }
+        } catch (err) {
+          console.error('[Upload] AI 分析失败:', err.message);
+        }
+      }
+
+      // 获取该素材的所有标签
+      const materialTags = db.prepare(`
+        SELECT t.* FROM tags t
+        JOIN material_tags mt ON mt.tag_id = t.id
+        WHERE mt.material_id = ?
+      `).all(material.id);
+
+      results.push({
+        ...material,
+        tags: materialTags,
+        duplicate: duplicate ? { id: duplicate.id, name: duplicate.name } : null,
+        aiTags: aiTags.length > 0 ? aiTags : undefined
+      });
     }
 
     res.status(201).json({ success: true, data: results });
