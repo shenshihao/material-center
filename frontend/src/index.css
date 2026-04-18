@@ -14,8 +14,7 @@
   }
 
   body {
-    @apply bg-surface text-text-primary font-body antialiased;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.7' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.02'/%3E%3C/svg%3E");
+    @apply bg-cosmic-void text-stardust-primary font-body antialiased;
   }
 
   /* Custom scrollbar */
@@ -27,67 +26,71 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-surface-muted rounded-full;
+    @apply bg-cosmic-muted rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
-    @apply bg-accent-muted;
+    @apply bg-star/50;
   }
 
   /* Selection */
   ::selection {
-    @apply bg-accent/30 text-text-primary;
+    @apply bg-star/30 text-stardust-primary;
+  }
+
+  /* Focus visible */
+  :focus-visible {
+    @apply outline-none ring-2 ring-star/50 ring-offset-2 ring-offset-cosmic-void;
   }
 }
 
 @layer components {
   /* Buttons */
   .btn-primary {
-    @apply relative overflow-hidden px-4 py-2 bg-accent hover:bg-accent-hover text-surface font-display font-semibold text-sm
+    @apply relative overflow-hidden px-4 py-2 bg-star hover:bg-star-bright text-cosmic-void font-display font-semibold text-sm
            rounded-lg transition-all duration-200 cursor-pointer
-           hover:shadow-glow-sm active:scale-[0.98];
+           hover:shadow-star-sm active:scale-[0.98];
   }
 
   .btn-ghost {
-    @apply px-4 py-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover
-           font-body text-sm transition-all duration-150 cursor-pointer rounded-lg
-           hover:border hover:border-surface-border;
+    @apply px-4 py-2 text-stardust-secondary hover:text-stardust-primary hover:bg-cosmic-dust
+           font-body text-sm transition-all duration-150 cursor-pointer rounded-lg;
   }
 
   /* Cards */
   .card {
-    @apply bg-surface-card border border-surface-border rounded-xl;
+    @apply bg-cosmic-nebula/50 border border-cosmic-border/50 rounded-xl;
   }
 
   .card-elevated {
-    @apply bg-surface-elevated border border-surface-border rounded-xl;
+    @apply bg-cosmic-dust/50 border border-cosmic-border/50 rounded-xl;
   }
 
   /* Input */
   .input {
-    @apply bg-surface-hover border border-surface-border rounded-lg px-3 py-2
-           text-text-primary placeholder-text-muted font-body text-sm
-           focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent/30
+    @apply bg-cosmic-dust/30 border border-cosmic-border/50 rounded-lg px-3 py-2
+           text-stardust-primary placeholder-stardust-muted/40 font-body text-sm
+           focus:outline-none focus:border-star/50 focus:ring-1 focus:ring-star/30
            transition-all duration-150;
   }
 
   /* Badge */
   .badge {
-    @apply inline-flex items-center px-2 py-0.5 bg-accent/15 text-accent-light text-xs font-medium rounded-full;
+    @apply inline-flex items-center px-2 py-0.5 bg-star/15 text-star text-xs font-medium rounded-lg;
   }
 
   /* Skeleton loading */
   .skeleton {
-    @apply relative overflow-hidden bg-surface-hover rounded;
+    @apply relative overflow-hidden bg-cosmic-dust/50 rounded;
     &::after {
       content: '';
       @apply absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent;
       background-size: 200% 100%;
-      animation: shimmer 2s infinite linear;
+      animation: shimmer 3s infinite linear;
     }
   }
 }
 
-/* Animations for children */
+/* Animations for children stagger */
 .animate-stagger > * {
   animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
@@ -103,5 +106,16 @@
 
 /* Glass effect */
 .glass {
-  @apply backdrop-blur-xl bg-surface-card/80;
+  @apply backdrop-blur-xl bg-cosmic-deep/80;
+}
+
+/* Lightbox overrides */
+.yet-another-react-lightbox {
+  --yarl-color-accent: #00f5d4;
+}
+
+/* Noise texture animation */
+@keyframes noiseMove {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(10px, 10px); }
 }

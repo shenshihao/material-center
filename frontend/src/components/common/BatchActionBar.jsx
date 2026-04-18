@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, FolderInput, Heart, HeartOff, X, Hash, Loader2, Download, CheckSquare, Square } from 'lucide-react';
+import { Trash2, FolderInput, Heart, HeartOff, X, Hash, Loader2, Download, CheckSquare, Sparkles } from 'lucide-react';
 import useMaterialStore from '../../stores/materialStore';
 import useCategoryStore from '../../stores/categoryStore';
 import client from '../../api/client';
@@ -88,12 +88,12 @@ export default function BatchActionBar() {
   return (
     <>
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 animate-slide-up">
-        <div className="flex items-center gap-2 px-4 py-3 bg-surface-elevated/95 backdrop-blur-xl border border-surface-border rounded-2xl shadow-2xl shadow-black/20">
+        <div className="flex items-center gap-1 px-3 py-2.5 bg-cosmic-deep/95 backdrop-blur-2xl border border-cosmic-border/50 rounded-2xl shadow-glass">
           {/* Selection count */}
-          <div className="flex items-center gap-2 pr-3 border-r border-surface-border">
-            <CheckSquare size={16} className="text-accent" />
-            <span className="text-text-primary font-medium text-sm">
-              <span className="text-accent">{count}</span> 项已选
+          <div className="flex items-center gap-2 pr-3 border-r border-cosmic-border/50">
+            <CheckSquare size={15} className="text-star" />
+            <span className="text-stardust-primary font-medium text-xs">
+              <span className="text-star">{count}</span> 项已选
             </span>
           </div>
 
@@ -103,67 +103,67 @@ export default function BatchActionBar() {
               <select
                 value={targetCat}
                 onChange={(e) => setTargetCat(e.target.value)}
-                className="input h-8 text-xs bg-surface border-surface-border/50 rounded-lg"
+                className="h-8 px-3 text-xs bg-cosmic-dust/30 border border-cosmic-border/50 rounded-lg text-stardust-primary"
               >
                 <option value="">未分类</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{'  '.repeat(c.depth)}{c.name}</option>
                 ))}
               </select>
-              <button onClick={handleMove} className="btn-primary py-1.5 text-xs px-4">确认移动</button>
-              <button onClick={() => setMoving(false)} className="btn-ghost py-1.5 text-xs px-3">取消</button>
+              <button onClick={handleMove} className="px-4 py-1.5 text-xs font-medium rounded-lg bg-star/10 text-star border border-star/20 hover:bg-star/20 transition-all">确认移动</button>
+              <button onClick={() => setMoving(false)} className="px-3 py-1.5 text-xs text-stardust-muted hover:text-stardust-primary transition-all">取消</button>
             </>
           ) : (
             <>
               {/* Action buttons */}
               <button
                 onClick={() => setMoving(true)}
-                className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 text-stardust-secondary hover:text-stardust-primary hover:bg-cosmic-dust/50 rounded-lg text-xs transition-all"
               >
-                <FolderInput size={15} />
+                <FolderInput size={14} />
                 <span>移动</span>
               </button>
 
               <button
                 onClick={handleDownload}
                 disabled={downloading}
-                className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg text-sm transition-all disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-2 text-stardust-secondary hover:text-stardust-primary hover:bg-cosmic-dust/50 rounded-lg text-xs transition-all disabled:opacity-50"
               >
-                {downloading ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+                {downloading ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
                 <span>下载</span>
               </button>
 
               <button
                 onClick={() => setRenameModal(true)}
-                className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 text-stardust-secondary hover:text-stardust-primary hover:bg-cosmic-dust/50 rounded-lg text-xs transition-all"
               >
-                <Hash size={15} />
+                <Hash size={14} />
                 <span>序号命名</span>
               </button>
 
               <button
                 onClick={() => batchAction('favorite')}
-                className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:text-rose-400 hover:bg-rose-500/10 rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 text-stardust-secondary hover:text-nebula hover:bg-nebula/10 rounded-lg text-xs transition-all"
               >
-                <Heart size={15} />
+                <Heart size={14} />
                 <span>收藏</span>
               </button>
 
               <button
                 onClick={() => batchAction('unfavorite')}
-                className="flex items-center gap-2 px-3 py-2 text-text-secondary hover:text-text-primary hover:bg-surface-hover rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 text-stardust-secondary hover:text-stardust-primary hover:bg-cosmic-dust/50 rounded-lg text-xs transition-all"
               >
-                <HeartOff size={15} />
+                <HeartOff size={14} />
                 <span>取消收藏</span>
               </button>
 
-              <div className="w-px h-6 bg-surface-border mx-1" />
+              <div className="w-px h-5 bg-cosmic-border/50 mx-1" />
 
               <button
                 onClick={handleDelete}
-                className="flex items-center gap-2 px-3 py-2 text-red-400/80 hover:text-red-300 hover:bg-red-500/10 rounded-lg text-sm transition-all"
+                className="flex items-center gap-2 px-3 py-2 text-nebula/80 hover:text-nebula hover:bg-nebula/10 rounded-lg text-xs transition-all"
               >
-                <Trash2 size={15} />
+                <Trash2 size={14} />
                 <span>删除</span>
               </button>
             </>
@@ -172,7 +172,7 @@ export default function BatchActionBar() {
           {/* Close button */}
           <button
             onClick={clearSelection}
-            className="flex items-center justify-center w-8 h-8 text-text-muted hover:text-text-primary hover:bg-surface-hover rounded-lg transition-all ml-1"
+            className="flex items-center justify-center w-8 h-8 text-stardust-muted hover:text-stardust-primary hover:bg-cosmic-dust/50 rounded-lg transition-all ml-1"
           >
             <X size={16} />
           </button>
@@ -181,50 +181,50 @@ export default function BatchActionBar() {
 
       {/* Rename Modal */}
       {renameModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-sm mx-4 bg-surface-card border border-surface-border rounded-2xl shadow-2xl animate-scale-in">
-            <div className="flex items-center justify-between px-6 py-5 border-b border-surface-border">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-cosmic-void/90 backdrop-blur-2xl animate-fade-in">
+          <div className="w-full max-w-sm mx-4 bg-cosmic-deep border border-cosmic-border/50 rounded-2xl shadow-glass animate-scale-in">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-cosmic-border/30">
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 bg-accent/10 rounded-lg flex items-center justify-center">
-                  <Hash size={16} className="text-accent" />
+                <div className="w-9 h-9 bg-star/10 rounded-lg flex items-center justify-center">
+                  <Hash size={16} className="text-star" />
                 </div>
-                <h2 className="font-display font-semibold text-text-primary">序号重命名</h2>
+                <h2 className="font-display font-semibold text-stardust-primary">序号重命名</h2>
               </div>
-              <button onClick={() => setRenameModal(false)} className="text-text-muted hover:text-text-primary">
+              <button onClick={() => setRenameModal(false)} className="text-stardust-muted hover:text-stardust-primary">
                 <X size={18} />
               </button>
             </div>
 
-            <div className="p-6 space-y-5">
-              <p className="text-text-secondary text-sm">
-                将选中的 <span className="text-accent font-semibold">{count}</span> 个素材重命名为序号格式
+            <div className="p-5 space-y-4">
+              <p className="text-stardust-secondary text-xs">
+                将选中的 <span className="text-star font-semibold">{count}</span> 个素材重命名为序号格式
               </p>
 
               <div>
-                <label className="block text-text-muted text-xs mb-2 font-medium">前缀（可选）</label>
+                <label className="block text-stardust-secondary text-xs mb-2 font-medium">前缀（可选）</label>
                 <input
-                  className="input w-full"
+                  className="w-full h-10 px-3 rounded-lg bg-cosmic-dust/30 border border-cosmic-border/50 text-stardust-primary text-xs placeholder:text-stardust-muted/40 focus:outline-none focus:border-star/50 transition-all"
                   placeholder="例如：截图_"
                   value={prefix}
                   onChange={e => setPrefix(e.target.value)}
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-text-muted text-xs mb-2 font-medium">起始数字</label>
+                  <label className="block text-stardust-secondary text-xs mb-2 font-medium">起始数字</label>
                   <input
                     type="number"
                     min="1"
-                    className="input w-full"
+                    className="w-full h-10 px-3 rounded-lg bg-cosmic-dust/30 border border-cosmic-border/50 text-stardust-primary text-xs focus:outline-none focus:border-star/50 transition-all"
                     value={startNum}
                     onChange={e => setStartNum(Number(e.target.value))}
                   />
                 </div>
                 <div>
-                  <label className="block text-text-muted text-xs mb-2 font-medium">位数</label>
+                  <label className="block text-stardust-secondary text-xs mb-2 font-medium">位数</label>
                   <select
-                    className="input w-full"
+                    className="w-full h-10 px-3 rounded-lg bg-cosmic-dust/30 border border-cosmic-border/50 text-stardust-primary text-xs focus:outline-none focus:border-star/50 transition-all"
                     value={digits}
                     onChange={e => setDigits(Number(e.target.value))}
                   >
@@ -237,33 +237,33 @@ export default function BatchActionBar() {
               </div>
 
               {/* Preview */}
-              <div className="bg-surface-elevated rounded-xl px-4 py-3 border border-surface-border/50">
-                <p className="text-text-muted text-xs mb-2 font-medium">预览</p>
+              <div className="bg-cosmic-dust/20 rounded-xl px-4 py-3 border border-cosmic-border/30">
+                <p className="text-stardust-muted text-[10px] mb-2 font-medium">预览</p>
                 <div className="space-y-1">
                   {Array.from({ length: Math.min(3, count) }).map((_, i) => {
                     const n = startNum + i;
                     const padded = String(n).padStart(digits, '0');
                     return (
-                      <p key={i} className="text-text-secondary text-xs font-mono">
+                      <p key={i} className="text-stardust-secondary text-[11px] font-mono">
                         {prefix}{padded}.png
                       </p>
                     );
                   })}
-                  {count > 3 && <p className="text-text-muted text-xs">... 共 {count} 个</p>}
+                  {count > 3 && <p className="text-stardust-muted text-[10px]">... 共 {count} 个</p>}
                 </div>
               </div>
 
-              {renameError && <p className="text-red-400 text-sm">{renameError}</p>}
+              {renameError && <p className="text-nebula text-xs">{renameError}</p>}
             </div>
 
-            <div className="flex items-center justify-end gap-3 px-6 py-5 border-t border-surface-border bg-surface-elevated/50">
-              <button onClick={() => setRenameModal(false)} className="btn-ghost px-5" disabled={renaming}>取消</button>
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-cosmic-border/30 bg-cosmic-nebula/20">
+              <button onClick={() => setRenameModal(false)} className="px-4 py-2 text-xs text-stardust-muted hover:text-stardust-primary transition-all" disabled={renaming}>取消</button>
               <button
                 onClick={handleRename}
                 disabled={renaming}
-                className="btn-primary disabled:opacity-50 flex items-center gap-2"
+                className="flex items-center gap-2 px-4 py-2 text-xs font-medium rounded-lg bg-gradient-to-r from-star to-nebula text-cosmic-void shadow-star-sm hover:shadow-star transition-all disabled:opacity-50"
               >
-                {renaming && <Loader2 size={14} className="animate-spin" />}
+                {renaming && <Loader2 size={12} className="animate-spin" />}
                 {renaming ? '重命名中...' : '确认重命名'}
               </button>
             </div>
